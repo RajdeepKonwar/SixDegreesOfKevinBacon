@@ -29,7 +29,8 @@
  **/
 
 #include <chrono>
-#include <cstring>
+#include <iostream>
+
 #include "UnionFind.hpp"
 
 //! Timer class to time operations (in nanoseconds)
@@ -85,9 +86,9 @@ int main( int i_argc, char** i_argv ) {
     }
   }
 
-  Timer l_tmr;        //! Timer object
-  long long l_tt;     //! Time (long long format)
-  string l_algorithm; //! Traversal algorithm
+  Timer l_tmr;              //! Timer object
+  long long l_tt;           //! Time (long long format)
+  std::string l_algorithm;  //! Traversal algorithm
 
   if( i_argc == 4 )
     l_algorithm = "ufind";  //! By-default, ufind algorithm (if last arg missing)

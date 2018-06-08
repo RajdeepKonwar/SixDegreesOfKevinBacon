@@ -31,19 +31,21 @@
 #ifndef ACTORNODE_H
 #define ACTORNODE_H
 
+#include <unordered_map>
+
 //! Node in graph representing an actor
 struct Actor {
-  int                           index;  //! Global actor index
-  int                           dist;   //! Distance from source
-  int                           prev;   //! Previous actor's index
-  bool                          done;   //! Discovery flag (for Djikstra's)
-  unordered_map< int, Edge * >  adj;    //! Adjacency list (neighbor-index, edge)
+  int                               m_index;  //! Global actor index
+  int                               m_dist;   //! Distance from source
+  int                               m_prev;   //! Previous actor's index
+  bool                              m_done;   //! Discovery flag (for Djikstra's)
+  std::unordered_map< int, Edge * > m_adj;    //! Adjacency list (neighbor-index, edge)
 
   /** '<' operator overloaded to compare actors based on their distance i.e.
    *  lesser distance has higher priority in the priority queue for Djikstra's
    */
-  bool operator < ( const Actor &other ) {
-    return (dist >= other.dist);
+  bool operator < ( const Actor &i_other ) {
+    return (this->m_dist >= i_other.m_dist);
   }
 };
 

@@ -31,12 +31,13 @@
 #ifndef ACTOREDGE_H
 #define ACTOREDGE_H
 
-using namespace std;
+#include <iostream>
+#include <cstring>
 
 //! Edge in graph representing a movie between 2 actors
 struct Edge {
-  int     weight;   //! Edge-weight
-  string  movie;    //! Movie-title
+  int         m_weight;   //! Edge-weight
+  std::string m_movie;    //! Movie-title
 };
 
 #endif //! ACTOREDGE_H

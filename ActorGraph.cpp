@@ -29,6 +29,8 @@
  * perform BFS and Djikstra's path-finding traversal between actors.
  **/
 
+#include <algorithm>
+
 #include "ActorGraph.h"
 
 /** Input params: First line to output in file, use weighted edges or not
@@ -37,9 +39,9 @@
  *
  *  Populates outLines with first line to output (eg: Actor1	Actor2	Year).
  */
-ActorGraph::ActorGraph( const string &outLine, const string &uwe ) :
-                                                      use_weighted_edges(uwe) {
-  outLines.push_back( outLine );
+ActorGraph::ActorGraph( const std::string &i_outLine,
+                        const std::string &i_uwe ) : m_useWeightedEdges(i_uwe) {
+  m_outLines.push_back( i_outLine );
 }
 
 /** Input params: None
@@ -59,20 +61,21 @@ ActorGraph::~ActorGraph() {
  *  Creates actor nodes, initilizes them and populates the adjacency list
  *  depending on input boolean flag.
  */
-void ActorGraph::createGraph( const bool &createEdges ) {
-  Actor *act;
+void ActorGraph::createGraph( const bool &i_createEdges ) {
+  Actor *l_act;
 
-  for( moa = moviesOfActor.begin(); moa != moviesOfActor.end(); ++moa ) {
-    act         = new Actor;                        //! New vertex in graph
-    ioa         = indexOfActor.find( moa->first );  //! Get global actor index
-    act->index  = ioa->second;                      //! Set index
-    act->dist   = numeric_limits< int >::max();     //! Set distance to infinity
-    act->prev   = -1;                               //! Set previous to null
-    act->done   = false;                            //! Set done to false
-    if( createEdges )
-      findNeighbors( moa->first, act->adj );        //! Populate edge-weights
+  for( m_moa = m_moviesOfActor.begin(); m_moa != m_moviesOfActor.end(); ++m_moa ) {
+    l_act           = new Actor;                            //! New vertex in graph
+    m_ioa           = m_indexOfActor.find( m_moa->first );  //! Get global actor index
+    l_act->m_index  = m_ioa->second;                        //! Set index
+    l_act->m_dist   = std::numeric_limits< int >::max();    //! Set distance to infinity
+    l_act->m_prev   = -1;                                   //! Set previous to null
+    l_act->m_done   = false;                                //! Set done to false
 
-    theGraph.push_back( act );                      //! Push vertex to graph
+    if( i_createEdges )
+      findNeighbors( m_moa->first, l_act->m_adj );          //! Populate edge-weights
+
+    m_theGraph.push_back( l_act );                          //! Push vertex to graph
   }
 }
 
@@ -84,11 +87,11 @@ void ActorGraph::createGraph( const bool &createEdges ) {
  */
 void ActorGraph::deleteGraph() {
   //! Memory deallocation
-  for( ait = theGraph.begin(); ait != theGraph.end(); ++ait ) {
-    for( eit = (*ait)->adj.begin(); eit != (*ait)->adj.end(); ++eit )
-      delete (*eit).second;   //! Deallocate Edges
+  for( m_ait = m_theGraph.begin(); m_ait != m_theGraph.end(); ++m_ait ) {
+    for( m_eit = (*m_ait)->m_adj.begin(); m_eit != (*m_ait)->m_adj.end(); ++m_eit )
+      delete (*m_eit).second;   //! Deallocate Edges
 
-    delete *ait;  //! Deallocate Actors
+    delete *m_ait;  //! Deallocate Actors
   }
 }
 
@@ -98,26 +101,27 @@ void ActorGraph::deleteGraph() {
  *
  *  Movie title is of form: Movie#@year (eg: INCEPTION#@2010).
  */
-int ActorGraph::extractYear( const string &movie ) {
-  size_t pos;   //! String position tracker
-  string year;  //! String to hold year extracted from last 4 places of movie
+int ActorGraph::extractYear( const std::string &i_movie ) {
+  size_t l_pos;       //! String position tracker
+  std::string l_year; //! String to hold year extracted from last 4 places of movie
 
-  pos   = movie.find( "#@" );
-  pos   += 2;
-  year  = movie.substr( pos );
+  l_pos   = i_movie.find( "#@" );
+  l_pos   += 2;
+  l_year  = i_movie.substr( l_pos );
 
-  return stoi( year );
+  return std::stoi( l_year );
 }
 
 /** Input params: Actor node and neighboring node's index
  *  Return param: Movie on the edge between the two actors
  *  Description : Finds a movie edge
  */
-string ActorGraph::findMovieEdge( Actor *node1, const int &index2 ) {
-  eit = node1->adj.find( index2 );  //! Find neighbor's index in adj list
+std::string ActorGraph::findMovieEdge(       Actor *i_node1,
+                                       const int   &i_index2 ) {
+  m_eit = i_node1->m_adj.find( i_index2 );  //! Find neighbor's index in adj list
 
-  if( eit != node1->adj.end() )
-    return eit->second->movie;      //! Return movie stored on edge
+  if( m_eit != i_node1->m_adj.end() )
+    return m_eit->second->m_movie;      //! Return movie stored on edge
   else
     return "";
 }
@@ -129,63 +133,63 @@ string ActorGraph::findMovieEdge( Actor *node1, const int &index2 ) {
  *  Finds neighbor nodes, populates adjacency list with newly created edges
  *  for movies lying on them with their respective weights.
  */
-void ActorGraph::findNeighbors( const string &actor,
-                                unordered_map< int, Edge * > &adjEdges ) {
-  int ind;      //! Index of neighbor
-  int weight;   //! Edge-weight
+void ActorGraph::findNeighbors( const std::string &i_actor,
+                                      std::unordered_map< int, Edge * > &io_adjEdges ) {
+  int l_ind;      //! Index of neighbor
+  int l_weight;   //! Edge-weight
 
   //! Search for actor in respective hash-map
-  moa = moviesOfActor.find( actor );
-  if( moa != moviesOfActor.end() ) {
-    for( vit = (moa->second).begin(); vit != (moa->second).end(); ++vit ) {
-      aim = actorsInMovie.find( *vit );  //! *vit is movie
+  m_moa = m_moviesOfActor.find( i_actor );
+  if( m_moa != m_moviesOfActor.end() ) {
+    for( m_vit = (m_moa->second).begin(); m_vit != (m_moa->second).end(); ++m_vit ) {
+      m_aim = m_actorsInMovie.find( *m_vit );  //! *vit is movie
 
-      if( aim != actorsInMovie.end() ) {
-        for( sit = (aim->second).begin(); sit != (aim->second).end(); ++sit ) {
+      if( m_aim != m_actorsInMovie.end() ) {
+        for( m_sit = (m_aim->second).begin(); m_sit != (m_aim->second).end(); ++m_sit ) {
           //! Skip self
-          if( actor.compare( *sit ) == 0 )  //! *sit is actor
+          if( i_actor.compare( *m_sit ) == 0 )  //! *sit is actor
             continue;
 
           //! Unweighted edges
-          if( use_weighted_edges == "u" ) {
-            weight = 1;
+          if( m_useWeightedEdges == "u" ) {
+            l_weight = 1;
 
             //! Get index of neighbor and search in adjacency list
-            ioa = indexOfActor.find( *sit );
-            ind = ioa->second;
-            eit = adjEdges.find( ind );
+            m_ioa = m_indexOfActor.find( *m_sit );
+            l_ind = m_ioa->second;
+            m_eit = io_adjEdges.find( l_ind );
 
-            if( eit != adjEdges.end() ) {
+            if( m_eit != io_adjEdges.end() )
               continue;
-            } else {
-              Edge *ed      = new Edge;
-              ed->movie     = *vit;
-              ed->weight    = weight;
-              adjEdges[ind] = ed;
+            else {
+              Edge *l_ed          = new Edge;
+              l_ed->m_movie       = *m_vit;
+              l_ed->m_weight      = l_weight;
+              io_adjEdges[l_ind]  = l_ed;
             }
           }
 
           //! Weighted edges
           else {
-            weight  = 1 + (2015 - extractYear( *vit ));   //! Weight-formula
+            l_weight  = 1 + (2015 - extractYear( *m_vit ));   //! Weight-formula
 
             //! Get index of neighbor and search in adjacency list
-            ioa = indexOfActor.find( *sit );
-            ind = ioa->second;
-            eit = adjEdges.find( ind );
+            m_ioa = m_indexOfActor.find( *m_sit );
+            l_ind = m_ioa->second;
+            m_eit = io_adjEdges.find( l_ind );
 
-            if( eit != adjEdges.end() ) {
-              if( weight < eit->second->weight ) {
+            if( m_eit != io_adjEdges.end() ) {
+              if( l_weight < m_eit->second->m_weight ) {
                 //! Update edge with newer movies having lesser weights
-                eit->second->weight = weight;
-                eit->second->movie  = *vit;
+                m_eit->second->m_weight = l_weight;
+                m_eit->second->m_movie  = *m_vit;
               }
             } else {
               //! Construct new edge with edge info
-              Edge *ed      = new Edge;
-              ed->movie     = *vit;
-              ed->weight    = weight;
-              adjEdges[ind] = ed;
+              Edge *l_ed          = new Edge;
+              l_ed->m_movie       = *m_vit;
+              l_ed->m_weight      = l_weight;
+              io_adjEdges[l_ind]  = l_ed;
             }
           }
         }
@@ -202,90 +206,91 @@ void ActorGraph::findNeighbors( const string &actor,
  *  information (actors & movies) in a particular format to outLines to later
  *  write out to the output file.
  */
-void ActorGraph::BFSTraverse( const int &from, const int &to ) {
-  queue< Actor * >  toExplore;    //! Queue to explore
-  vector< Actor * > visited;      //! Visited nodes during traversal
+void ActorGraph::BFSTraverse( const int &i_from,
+                              const int &i_to ) {
+  std::queue< Actor * >  l_toExplore;   //! Queue to explore
+  std::vector< Actor * > l_visited;     //! Visited nodes during traversal
 
-  Actor *next, *neighbor;         //! Actor nodes
-  bool found    = false;          //! Flag stating success of traversal
+  Actor *l_next, *l_neighbor;           //! Actor nodes
+  bool l_found    = false;              //! Flag stating success of traversal
 
-  Actor *start  = theGraph[from]; //! Initial node
-  Actor *end    = theGraph[to];   //! End node
+  Actor *l_start  = m_theGraph[i_from]; //! Initial node
+  Actor *l_end    = m_theGraph[i_to];   //! End node
 
   //! Intial node conditioning
-  start->dist   = 0;
-  toExplore.push( start );
-  visited.push_back( start );
+  l_start->m_dist   = 0;
+  l_toExplore.push( l_start );
+  l_visited.push_back( l_start );
 
   //! Traverse till queue isn't empty
-  while( !toExplore.empty() ) {
+  while( !l_toExplore.empty() ) {
     //! Get front element from queue
-    next  = toExplore.front();
-    toExplore.pop();
+    l_next  = l_toExplore.front();
+    l_toExplore.pop();
 
     //! Break if traverse was successful
-    if( next == end ) {
-      found = true;
+    if( l_next == l_end ) {
+      l_found = true;
       break;
     }
 
     //! Breadth-first search algorithm
-    for( eit = next->adj.begin(); eit != next->adj.end(); ++eit ) {
-      neighbor  = theGraph[eit->first];
+    for( m_eit = l_next->m_adj.begin(); m_eit != l_next->m_adj.end(); ++m_eit ) {
+      l_neighbor  = m_theGraph[m_eit->first];
 
-      if( (next->dist + 1) < neighbor->dist ) {
-        neighbor->dist  = next->dist + 1;
-        neighbor->prev  = next->index;
-        toExplore.push( neighbor );
-        visited.push_back( neighbor );
+      if( (l_next->m_dist + 1) < l_neighbor->m_dist ) {
+        l_neighbor->m_dist  = l_next->m_dist + 1;
+        l_neighbor->m_prev  = l_next->m_index;
+        l_toExplore.push( l_neighbor );
+        l_visited.push_back( l_neighbor );
       }
     }
   }
 
   //! For successful traversals, store path information (movies and actors)
-  if( found ) {
-    int prevInd;
-    vector< string > output;
-    string actor, movie, result;
+  if( l_found ) {
+    int l_prevInd;
+    std::vector< std::string > l_output;
+    std::string l_actor, l_movie, l_result;
 
-    Actor *curr = theGraph[end->prev];
+    Actor *l_curr = m_theGraph[l_end->m_prev];
 
-    aai     = actorAtIndex.find( end->index );
-    actor   = "(" + aai->second + ")";
-    prevInd = end->index;
-    output.push_back( actor );
+    m_aai     = m_actorAtIndex.find( l_end->m_index );
+    l_actor   = "(" + m_aai->second + ")";
+    l_prevInd = l_end->m_index;
+    l_output.push_back( l_actor );
 
-    while( curr != start ) {
-      movie   = "--[" + findMovieEdge( curr, prevInd ) + "]-->";
-      output.push_back( movie );
+    while( l_curr != l_start ) {
+      l_movie   = "--[" + findMovieEdge( l_curr, l_prevInd ) + "]-->";
+      l_output.push_back( l_movie );
 
-      aai     = actorAtIndex.find( curr->index );
-      actor   = "(" + aai->second + ")";
-      output.push_back( actor );
+      m_aai     = m_actorAtIndex.find( l_curr->m_index );
+      l_actor   = "(" + m_aai->second + ")";
+      l_output.push_back( l_actor );
 
-      prevInd = curr->index;
-      curr    = theGraph[curr->prev];
+      l_prevInd = l_curr->m_index;
+      l_curr    = m_theGraph[l_curr->m_prev];
     }
 
-    movie = "--[" + findMovieEdge( start, prevInd ) + "]-->";
-    output.push_back( movie );
+    l_movie = "--[" + findMovieEdge( l_start, l_prevInd ) + "]-->";
+    l_output.push_back( l_movie );
 
-    aai   = actorAtIndex.find( start->index );
-    actor = "(" + aai->second + ")";
-    output.push_back( actor );
+    m_aai   = m_actorAtIndex.find( l_start->m_index );
+    l_actor = "(" + m_aai->second + ")";
+    l_output.push_back( l_actor );
 
-    reverse( output.begin(), output.end() );
+    std::reverse( l_output.begin(), l_output.end() );
 
-    for( string s : output )
-      result += s;
+    for( std::string l_s : l_output )
+      l_result += l_s;
 
-    outLines.push_back( result ); //! Store output line to be written out later
+    m_outLines.push_back( l_result ); //! Store output line to be written out later
   }
 
   //! Reset distances and previous info for all visited nodes during traversal
-  for( ait = visited.begin(); ait != visited.end(); ++ait ) {
-    (*ait)->dist = numeric_limits< int >::max();
-    (*ait)->prev = -1;
+  for( m_ait = l_visited.begin(); m_ait != l_visited.end(); ++m_ait ) {
+    (*m_ait)->m_dist = std::numeric_limits< int >::max();
+    (*m_ait)->m_prev = -1;
   }
 }
 
@@ -297,99 +302,99 @@ void ActorGraph::BFSTraverse( const int &from, const int &to ) {
  *  path information (actors & movies) in a particular format to outLines to
  *  later write out to the output file.
  */
-void ActorGraph::DjikstraTraverse( const int &from, const int &to ) {
+void ActorGraph::DjikstraTraverse( const int &i_from,
+                                   const int &i_to ) {
   //! Priority queue with custom comparator class (ActorComp)
-  priority_queue< Actor *, vector< Actor * >,
-                  ActorComp > toExplore;
-  vector< Actor * >           visited;  //! Visited nodes
+  std::priority_queue< Actor *, std::vector< Actor * >, ActorComp > l_toExplore;
+  std::vector< Actor * > l_visited;       //! Visited nodes
 
-  Actor *next, *neighbor;               //! Actor nodes
-  bool found    = false;                //! Flag stating success of traversal
-  int cost      = 0;                    //! Cost of traversal
+  Actor *l_next, *l_neighbor;             //! Actor nodes
+  bool l_found    = false;                //! Flag stating success of traversal
+  int l_cost      = 0;                    //! Cost of traversal
 
-  Actor *start  = theGraph[from];       //! Initial node
-  Actor *end    = theGraph[to];         //! End node
+  Actor *l_start  = m_theGraph[i_from];   //! Initial node
+  Actor *l_end    = m_theGraph[i_to];     //! End node
 
   //! Initial node conditioning
-  start->dist   = 0;
-  toExplore.push( start );
-  visited.push_back( start );
+  l_start->m_dist   = 0;
+  l_toExplore.push( l_start );
+  l_visited.push_back( l_start );
 
   //! Traverse till priority queue isn't empty
-  while( !toExplore.empty() ) {
+  while( !l_toExplore.empty() ) {
     //! Get top element of priority queue
-    next = toExplore.top();
-    toExplore.pop();
+    l_next = l_toExplore.top();
+    l_toExplore.pop();
 
     //! Break if traverse was successful
-    if( next == end ) {
-      found = true;
+    if( l_next == l_end ) {
+      l_found = true;
       break;
     }
 
     //! Djikstra's algorithm
-    if( next->done == false ) {
-      next->done  = true;
+    if( l_next->m_done == false ) {
+      l_next->m_done  = true;
 
-      for( eit = next->adj.begin(); eit != next->adj.end(); ++eit ) {
-        neighbor  = theGraph[eit->first];
-        cost      = (next->dist) + (eit->second->weight);
+      for( m_eit = l_next->m_adj.begin(); m_eit != l_next->m_adj.end(); ++m_eit ) {
+        l_neighbor  = m_theGraph[m_eit->first];
+        l_cost      = (l_next->m_dist) + (m_eit->second->m_weight);
 
-        if( cost < neighbor->dist ) {
-          neighbor->dist  = cost;
-          neighbor->prev  = next->index;
-          toExplore.push( neighbor );
-          visited.push_back( neighbor );
+        if( l_cost < l_neighbor->m_dist ) {
+          l_neighbor->m_dist  = l_cost;
+          l_neighbor->m_prev  = l_next->m_index;
+          l_toExplore.push( l_neighbor );
+          l_visited.push_back( l_neighbor );
         }
       }
     }
   }
 
   //! For successful traversals, store path information (movies and actors)
-  if( found ) {
-    vector< string > output;
-    int prevInd;
-    string actor, movie, result;
+  if( l_found ) {
+    std::vector< std::string > l_output;
+    int l_prevInd;
+    std::string l_actor, l_movie, l_result;
 
-    Actor *curr = theGraph[end->prev];
+    Actor *l_curr = m_theGraph[l_end->m_prev];
 
-    aai     = actorAtIndex.find( end->index );
-    actor   = "(" + aai->second + ")";
-    prevInd = end->index;
-    output.push_back( actor );
+    m_aai     = m_actorAtIndex.find( l_end->m_index );
+    l_actor   = "(" + m_aai->second + ")";
+    l_prevInd = l_end->m_index;
+    l_output.push_back( l_actor );
 
-    while( curr != start ) {
-      movie   = "--[" + findMovieEdge( curr, prevInd ) + "]-->";
-      output.push_back( movie );
+    while( l_curr != l_start ) {
+      l_movie   = "--[" + findMovieEdge( l_curr, l_prevInd ) + "]-->";
+      l_output.push_back( l_movie );
 
-      aai     = actorAtIndex.find( curr->index );
-      actor   = "(" + aai->second + ")";
-      output.push_back( actor );
+      m_aai     = m_actorAtIndex.find( l_curr->m_index );
+      l_actor   = "(" + m_aai->second + ")";
+      l_output.push_back( l_actor );
 
-      prevInd = curr->index;
-      curr    = theGraph[curr->prev];
+      l_prevInd = l_curr->m_index;
+      l_curr    = m_theGraph[l_curr->m_prev];
     }
 
-    movie = "--[" + findMovieEdge( start, prevInd ) + "]-->";
-    output.push_back( movie );
+    l_movie = "--[" + findMovieEdge( l_start, l_prevInd ) + "]-->";
+    l_output.push_back( l_movie );
 
-    aai   = actorAtIndex.find( start->index );
-    actor = "(" + aai->second + ")";
-    output.push_back( actor );
+    m_aai   = m_actorAtIndex.find( l_start->m_index );
+    l_actor = "(" + m_aai->second + ")";
+    l_output.push_back( l_actor );
 
-    reverse( output.begin(), output.end() );
+    std::reverse( l_output.begin(), l_output.end() );
 
-    for( string s : output )
-      result += s;
+    for( std::string l_s : l_output )
+      l_result += l_s;
 
-    outLines.push_back( result ); //! Store output line to be written out later
+    m_outLines.push_back( l_result ); //! Store output line to be written out later
   }
 
   //! Reset distances, done & prev info for all visited nodes during traversal
-  for( ait = visited.begin(); ait != visited.end(); ++ait ) {
-    (*ait)->dist = numeric_limits< int >::max();
-    (*ait)->prev = -1;
-    (*ait)->done = false;
+  for( m_ait = l_visited.begin(); m_ait != l_visited.end(); ++m_ait ) {
+    (*m_ait)->m_dist = std::numeric_limits< int >::max();
+    (*m_ait)->m_prev = -1;
+    (*m_ait)->m_done = false;
   }
 }
 
@@ -400,81 +405,81 @@ void ActorGraph::DjikstraTraverse( const int &from, const int &to ) {
  *  Reads the input movie cast file, populates the correct hash-maps to later
  *  construct the graph and use in the graph traversal.
  */
-bool ActorGraph::loadFromFile( const char *infile ) {
-  string movie, s;
+bool ActorGraph::loadFromFile( const char *i_infile ) {
+  std::string l_movie, l_s;
 
   // Initialize the file stream
-  ifstream in( infile );
+  std::ifstream l_in( i_infile );
 
   //! Read and ignore first line (i.e. Actor/Actress	Movie	Year)
-  if( in )
-    getline( in, s );
+  if( l_in )
+    std::getline( l_in, l_s );
 
-  cout << "Reading " << infile << ".. ";
+  std::cout << "Reading " << i_infile << ".. ";
 
   //! Keep reading lines until the end of file is reached
-  while( in ) {
+  while( l_in ) {
     //! Get the next line
-    if( !getline( in, s ) )
+    if( !std::getline( l_in, l_s ) )
       break;
 
-    istringstream ss( s );
-    vector< string > record;
+    std::istringstream l_ss( l_s );
+    std::vector< std::string > l_record;
 
-    while( ss ) {
-      string next;
+    while( l_ss ) {
+      std::string l_next;
 
       //! Get the next string before hitting a tab character and put it in next
-      if( !getline( ss, next, '\t' ) )
+      if( !std::getline( l_ss, l_next, '\t' ) )
         break;
 
-      record.push_back( next );
+      l_record.push_back( l_next );
     }
 
-    if( record.size() != 3 ) {
+    if( l_record.size() != 3 ) {
       //! We should have exactly 3 columns
       continue;
     }
 
-    string actor_name( record[0] );
-    movie = record[1] + "#@" + record[2];
+    std::string l_actorName( l_record[0] );
+    l_movie = l_record[1] + "#@" + l_record[2];
 
-    aim = actorsInMovie.find( movie );
+    m_aim = m_actorsInMovie.find( l_movie );
     //! If movie doesnt exist as key in map, insert it
-    if( aim == actorsInMovie.end() ) {
-      vector< string > actorList{ actor_name };
-      actorsInMovie[movie] = actorList;
+    if( m_aim == m_actorsInMovie.end() ) {
+      std::vector< std::string > l_actorList{ l_actorName };
+      m_actorsInMovie[l_movie] = l_actorList;
     }
     //! Otherwise add actor to list of actors in the movie
     else
-      (aim->second).push_back( actor_name );
+      (m_aim->second).push_back( l_actorName );
 
-    moa = moviesOfActor.find( actor_name );
+    m_moa = m_moviesOfActor.find( l_actorName );
     //! If actor doesnt exist as key in map, insert it
-    if( moa == moviesOfActor.end() ) {
-      vector< string > movieList{ movie };
-      moviesOfActor[actor_name] = movieList;
+    if( m_moa == m_moviesOfActor.end() ) {
+      std::vector< std::string > l_movieList{ l_movie };
+      m_moviesOfActor[l_actorName] = l_movieList;
     }
     //! Otherwise add movie to list of movies done by the actor
     else
-      (moa->second).push_back( movie );
+      (m_moa->second).push_back( l_movie );
   }
 
-  if( !in.eof() ) {
-    cerr << "Failed to read " << infile << "!" << endl;
+  if( !l_in.eof() ) {
+    std::cerr << "Failed to read " << i_infile << "!\n";
     return false;
   }
 
-  in.close();
+  l_in.close();
 
   //! Assign global index to each actor, create 2 hashmaps (id-name & vice-versa)
-  int index = 0;
-  for( moa = moviesOfActor.begin(); moa != moviesOfActor.end(); ++moa ) {
-    actorAtIndex[index]       = moa->first;
-    indexOfActor[moa->first]  = index++;
+  int l_index = 0;
+  for( m_moa = m_moviesOfActor.begin(); m_moa != m_moviesOfActor.end(); ++m_moa ) {
+    m_actorAtIndex[l_index]       = m_moa->first;
+    m_indexOfActor[m_moa->first]  = l_index++;
   }
 
-  cout << "done" << endl;
+  std::cout << "done\n";
 
   return true;
 }
@@ -486,80 +491,80 @@ bool ActorGraph::loadFromFile( const char *infile ) {
  *  Reads the input actor pair file, and calls the corresponding graph
  *  traversal algorithm for weighted/unweighted graph.
  */
-bool ActorGraph::loadTestPairs( const char *infile ) {
-  bool flag = false;
-  int id1, id2;
-  string s;
+bool ActorGraph::loadTestPairs( const char *i_infile ) {
+  bool l_flag = false;
+  int l_id1, l_id2;
+  std::string l_s;
 
   //! Open the test_pairs_file
-  ifstream in( infile );
+  std::ifstream l_in( i_infile );
 
   //! Read and ignore first line (i.e. Actor1	Actor2)
-  if( in )
-    getline( in, s );
+  if( l_in )
+    std::getline( l_in, l_s );
 
-  while( in ) {
+  while( l_in ) {
     //! Get the next line
-    if( !getline( in, s ) )
+    if( !std::getline( l_in, l_s ) )
       break;
 
-    istringstream ss( s );
-    vector< string > pairs;
+    std::istringstream l_ss( l_s );
+    std::vector< std::string > l_pairs;
 
-    while( ss ) {
-      string next;
+    while( l_ss ) {
+      std::string l_next;
 
       //! Get the next string before hitting a tab character and put it in next
-      if( !getline( ss, next, '\t' ) )
+      if( !std::getline( l_ss, l_next, '\t' ) )
         break;
 
-      pairs.push_back( next );
+      l_pairs.push_back( l_next );
     }
 
-    if( pairs.size() != 2 ) {
+    if( l_pairs.size() != 2 ) {
       //! We should have exactly 2 columns
       continue;
     }
 
     //! Get actor names
-    string actor1( pairs[0] );
-    string actor2( pairs[1] );
+    std::string l_actor1( l_pairs[0] );
+    std::string l_actor2( l_pairs[1] );
 
-    cout << "Computing path for (" << actor1 << ") -> (" << actor2 << ")\n";
+    std::cout << "Computing path for (" << l_actor1 << ") -> (" << l_actor2 << ")\n";
 
     //! Get index of actor 1
-    ioa = indexOfActor.find( actor1 );
-    if( ioa == indexOfActor.end() ) {
-      cout << "Failure to locate node '" << actor1 << "'" << endl;
-      flag = true;
+    m_ioa = m_indexOfActor.find( l_actor1 );
+    if( m_ioa == m_indexOfActor.end() ) {
+      std::cout << "Failure to locate node '" << l_actor1 << "'\n";
+      l_flag = true;
     } else
-      id1 = ioa->second;
+      l_id1 = m_ioa->second;
 
     //! Get index of actor 2
-    ioa = indexOfActor.find( actor2 );
-    if( ioa == indexOfActor.end() ) {
-      cout << "Failure to locate node '" << actor2 << "'" << endl;
-      flag = true;
+    m_ioa = m_indexOfActor.find( l_actor2 );
+    if( m_ioa == m_indexOfActor.end() ) {
+      std::cout << "Failure to locate node '" << l_actor2 << "'\n";
+      l_flag = true;
     } else
-      id2 = ioa->second;
+      l_id2 = m_ioa->second;
 
-    if( flag )
+    if( l_flag )
       continue;
 
     //! Perform proper traversal corresponding to weighted/unweighted edges
-    if( use_weighted_edges == "u" )
-      BFSTraverse( id1, id2 );
+    if( m_useWeightedEdges == "u" )
+      BFSTraverse( l_id1, l_id2 );
     else
-      DjikstraTraverse( id1, id2 );
+      DjikstraTraverse( l_id1, l_id2 );
   }
 
-  if( !in.eof() ) {
-    cerr << "Failed to read " << infile << "!\n";
+  if( !l_in.eof() ) {
+    std::cerr << "Failed to read " << i_infile << "!\n";
     return false;
   }
 
   //! Close file
-  in.close();
+  l_in.close();
 
   return true;
 }
@@ -571,20 +576,20 @@ bool ActorGraph::loadTestPairs( const char *infile ) {
  *  Writes out all the lines stored in outLines, which got populated (hopefully)
  *  during our graph traversal.
  */
-bool ActorGraph::writeOutLines( const char *outfile ) {
+bool ActorGraph::writeOutLines( const char *i_outfile ) {
   //! Open file for writing output
-  ofstream out( outfile );
-  if( !out.is_open() ) {
-    cerr << "Failed to open " << outfile << "!\n";
+  std::ofstream l_out( i_outfile );
+  if( !l_out.is_open() ) {
+    std::cerr << "Failed to open " << i_outfile << "!\n";
     return false;
   }
 
   //! Write output
-  for( vit = outLines.begin(); vit != outLines.end(); ++vit )
-    out << *vit << endl;
+  for( m_vit = m_outLines.begin(); m_vit != m_outLines.end(); ++m_vit )
+    l_out << *m_vit << std::endl;
 
   //! Close file
-  out.close();
+  l_out.close();
 
   return true;
 }

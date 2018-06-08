@@ -32,55 +32,64 @@
 #ifndef UNIONFIND_HPP
 #define UNIONFIND_HPP
 
+#include <set>
+
 #include "ActorGraph.h"
 
 //! Class for actor connections, inheriting publically from ActorGraph
 class ActorConnect : public ActorGraph {
 protected:
-  set< int >            movieYears;   //! Set of movie years
-  set< int >::iterator  mit;          //! Movie year iterator
-  vector< int >         dsArr;        //! Disjoint Set array
+  std::set< int >            m_movieYears;   //! Set of movie years
+  std::set< int >::iterator  m_mit;          //! Movie year iterator
+  std::vector< int >         m_dsArr;        //! Disjoint Set array
 
   //! Extract years from the graph in ascending order
   void extractYearsInAscOrder();
 
   //! Construct edges in the graph for a given year
-  void constructEdges( const int &year );
+  void constructEdges( const int &i_year );
 
   //! Delete all edges in the graph
   void deleteEdges();
 
   //! Connect a pair of actors for a given algorithm
-  string connectPair( const string &algorithm, const int &id1, const int &id2 );
+  std::string connectPair( const std::string &i_algorithm,
+                           const int         &i_id1,
+                           const int         &i_id2 );
 
   //! Perform BFS traversal to find actor connections
-  bool pairBFSTraverse( const int &from, const int &to );
+  bool pairBFSTraverse( const int &i_from,
+                        const int &i_to );
 
   //! Find an actor in the disjoint set array
-  int Find( const int &index, int &height );
+  int Find( const int &i_index,
+                  int &o_height );
 
   //! Perform union of disjoint sets
-  void Union( const int &id1, const int &id2 );
+  void Union( const int &i_id1,
+              const int &i_id2 );
 
   //! Constructs the disjoint set array for a given year
-  void constructArr( const int &year );
+  void constructArr( const int &i_year );
 
   //! Perform union-find traversal to finf actor connections
-  bool pairUFindTraverse( const int &from, const int &to );
+  bool pairUFindTraverse( const int &i_from,
+                          const int &i_to );
 
 public:
   //! Constructor
-  ActorConnect( const string &outLine );
+  ActorConnect( const std::string &i_outLine );
 
   //! Connect actors from input actor pair file
-  bool connectActors( const char *infile, const string &algo );
+  bool connectActors( const char        *i_infile,
+                      const std::string &i_algo );
 };
 
 /** Input params: First line to output in file
  *  Return param: None
  *  Description : Constructor
  */
-ActorConnect::ActorConnect( const string &outLine ) : ActorGraph( outLine ) {}
+ActorConnect::ActorConnect( const std::string &i_outLine ) : ActorGraph( i_outLine ) {}
 
 /** Input params: None
  *  Return param: None
@@ -89,8 +98,8 @@ ActorConnect::ActorConnect( const string &outLine ) : ActorGraph( outLine ) {}
  *  Populates the set with movie years in an ascending order.
  */
 void ActorConnect::extractYearsInAscOrder() {
-  for( aim = actorsInMovie.begin(); aim != actorsInMovie.end(); ++aim )
-    movieYears.insert( extractYear( aim->first ) ); //! Insert into set
+  for( m_aim = m_actorsInMovie.begin(); m_aim != m_actorsInMovie.end(); ++m_aim )
+    m_movieYears.insert( extractYear( m_aim->first ) ); //! Insert into set
 }
 
 /** Input params: Year
@@ -99,54 +108,54 @@ void ActorConnect::extractYearsInAscOrder() {
  *
  *  Construct edges between actor nodes for movies of a particular year only.
  */
-void ActorConnect::constructEdges( const int &year ) {
-  Actor *actor;   //! Actor node
-  Edge  *edge;    //! Edge between actors
-  int   id1, id2; //! Indices of the actors
+void ActorConnect::constructEdges( const int &i_year ) {
+  Actor *l_actor;       //! Actor node
+  Edge  *l_edge;        //! Edge between actors
+  int    l_id1, l_id2;  //! Indices of the actors
 
   //! *moa is actor
-  for( moa = moviesOfActor.begin(); moa != moviesOfActor.end(); ++moa ) {
-    for( vit = (moa->second).begin(); vit != (moa->second).end(); ++vit ) {
+  for( m_moa = m_moviesOfActor.begin(); m_moa != m_moviesOfActor.end(); ++m_moa ) {
+    for( m_vit = (m_moa->second).begin(); m_vit != (m_moa->second).end(); ++m_vit ) {
       //! *vit is movie of actor (only consider movies matching year)
-      if( extractYear( *vit ) != year )
+      if( extractYear( *m_vit ) != i_year )
         continue;
 
-      aim = actorsInMovie.find( *vit );   //! *aim is movie
-      if( aim != actorsInMovie.end() ) {
-        for( sit = (aim->second).begin(); sit != (aim->second).end(); ++sit ) {
+      m_aim = m_actorsInMovie.find( *m_vit );   //! *aim is movie
+      if( m_aim != m_actorsInMovie.end() ) {
+        for( m_sit = (m_aim->second).begin(); m_sit != (m_aim->second).end(); ++m_sit ) {
           //! *sit is list of actors in movie
 
           //! Skip self
-          if( (moa->first).compare( *sit ) == 0 )
+          if( (m_moa->first).compare( *m_sit ) == 0 )
             continue;
 
           //! Get index of actor1
-          ioa   = indexOfActor.find( moa->first );
-          id1   = ioa->second;
-          actor = theGraph[id1];
+          m_ioa   = m_indexOfActor.find( m_moa->first );
+          l_id1   = m_ioa->second;
+          l_actor = m_theGraph[l_id1];
 
           //! Get index of actor2
-          ioa   = indexOfActor.find( *sit );
-          id2   = ioa->second;
-          eit   = actor->adj.find( id2 );
+          m_ioa   = m_indexOfActor.find( *m_sit );
+          l_id2   = m_ioa->second;
+          m_eit   = l_actor->m_adj.find( l_id2 );
 
           //! Construct a new edge if one doesn't exist between actor1-actor2
-          if( eit == actor->adj.end() ) {
-            edge            = new Edge;
-            edge->movie     = *vit;
-            edge->weight    = 1;
-            actor->adj[id2] = edge;
+          if( m_eit == l_actor->m_adj.end() ) {
+            l_edge                = new Edge;
+            l_edge->m_movie       = *m_vit;
+            l_edge->m_weight      = 1;
+            l_actor->m_adj[l_id2] = l_edge;
           }
 
-          actor = theGraph[id2];
-          eit   = actor->adj.find( id1 );
+          l_actor = m_theGraph[l_id2];
+          m_eit   = l_actor->m_adj.find( l_id1 );
 
           //! Edge needs to be two-way hence construct for actor2-actor1
-          if( eit == actor->adj.end() ) {
-            edge            = new Edge;
-            edge->movie     = *vit;
-            edge->weight    = 1;
-            actor->adj[id1] = edge;
+          if( m_eit == l_actor->m_adj.end() ) {
+            l_edge                = new Edge;
+            l_edge->m_movie       = *m_vit;
+            l_edge->m_weight      = 1;
+            l_actor->m_adj[l_id1] = l_edge;
           }
         }
       }
@@ -161,11 +170,11 @@ void ActorConnect::constructEdges( const int &year ) {
  *  Clears the adjacency list of each actor in the graph.
  */
 void ActorConnect::deleteEdges() {
-  for( ait = theGraph.begin(); ait != theGraph.end(); ++ait ) {
-    for( eit = (*ait)->adj.begin(); eit != (*ait)->adj.end(); ++eit )
-      delete (*eit).second;
+  for( m_ait = m_theGraph.begin(); m_ait != m_theGraph.end(); ++m_ait ) {
+    for( m_eit = (*m_ait)->m_adj.begin(); m_eit != (*m_ait)->m_adj.end(); ++m_eit )
+      delete (*m_eit).second;
 
-    (*ait)->adj.clear();  //! Clear the hash-map of all entries
+    (*m_ait)->m_adj.clear();  //! Clear the hash-map of all entries
   }
 }
 
@@ -175,33 +184,34 @@ void ActorConnect::deleteEdges() {
  *
  *  Connects a pair of actors depending on algorithm used and returns the year.
  */
-string ActorConnect::connectPair( const string &algorithm,
-                                  const int &id1, const int &id2 ) {
-  if( algorithm == "bfs" )
+std::string ActorConnect::connectPair( const std::string  &i_algorithm,
+                                       const int          &i_id1,
+                                       const int          &i_id2 ) {
+  if( i_algorithm == "bfs" )
     deleteEdges();  //! Clear hash-map of edges before venturing to next pair
   else
-    dsArr = vector< int >( theGraph.size(), -1 ); //! Array of indices to -1
+    m_dsArr = std::vector< int >( m_theGraph.size(), -1 ); //! Array of indices to -1
 
   //! *mit is pair of year and bool-flag in set (in ascending order)
-  for( mit = movieYears.begin(); mit != movieYears.end(); ++mit ) {
-    if( algorithm == "bfs" ) {
+  for( m_mit = m_movieYears.begin(); m_mit != m_movieYears.end(); ++m_mit ) {
+    if( i_algorithm == "bfs" ) {
       //! Construct edges for a particular year
-      constructEdges( *mit );
+      constructEdges( *m_mit );
 
       //! Perform BFS traversal, if unsuccessful, increment year and try again
-      if( !pairBFSTraverse( id1, id2 ) )
+      if( !pairBFSTraverse( i_id1, i_id2 ) )
         continue;
       else
-        return to_string( *mit );
+        return std::to_string( *m_mit );
     } else {
       //! Construct disjoint set array for each year
-      constructArr( *mit );
+      constructArr( *m_mit );
 
       //! Perform union-find traversal till successful
-      if( !pairUFindTraverse( id1, id2 ) )
+      if( !pairUFindTraverse( i_id1, i_id2 ) )
         continue;
       else
-        return to_string( *mit );
+        return std::to_string( *m_mit );
     }
   }
 
@@ -217,54 +227,55 @@ string ActorConnect::connectPair( const string &algorithm,
  *
  *  Performs a BFS traversal between the actors and return success state.
  */
-bool ActorConnect::pairBFSTraverse( const int &from, const int &to ) {
-  queue< Actor * >  toExplore;    //! Queue to explore
-  vector< Actor * > visited;      //! Visited nodes during traversal
+bool ActorConnect::pairBFSTraverse( const int &i_from,
+                                    const int &i_to ) {
+  std::queue< Actor * >  l_toExplore;    //! Queue to explore
+  std::vector< Actor * > l_visited;      //! Visited nodes during traversal
 
-  Actor *next, *neighbor;         //! Actor nodes
-  bool found    = false;          //! Flag stating success of traversal
+  Actor *l_next, *l_neighbor;         //! Actor nodes
+  bool l_found    = false;          //! Flag stating success of traversal
 
-  Actor *start  = theGraph[from]; //! Initial node
-  Actor *end    = theGraph[to];   //! End node
+  Actor *l_start  = m_theGraph[i_from]; //! Initial node
+  Actor *l_end    = m_theGraph[i_to];   //! End node
 
   //! Intial node conditioning
-  start->dist   = 0;
-  toExplore.push( start );
-  visited.push_back( start );
+  l_start->m_dist   = 0;
+  l_toExplore.push( l_start );
+  l_visited.push_back( l_start );
 
   //! Traverse till queue isn't empty
-  while( !toExplore.empty() ) {
+  while( !l_toExplore.empty() ) {
     //! Get front element from queue
-    next  = toExplore.front();
-    toExplore.pop();
+    l_next  = l_toExplore.front();
+    l_toExplore.pop();
 
     //! Break if traverse was successful
-    if( next == end ) {
-      found = true;
+    if( l_next == l_end ) {
+      l_found = true;
       break;
     }
 
     //! Breadth-first search algorithm
-    for( eit = next->adj.begin(); eit != next->adj.end(); ++eit ) {
-      neighbor  = theGraph[eit->first];
+    for( m_eit = l_next->m_adj.begin(); m_eit != l_next->m_adj.end(); ++m_eit ) {
+      l_neighbor  = m_theGraph[m_eit->first];
 
-      if( (next->dist + 1) < neighbor->dist ) {
-        neighbor->dist  = next->dist + 1;
-        neighbor->prev  = next->index;
-        toExplore.push( neighbor );
-        visited.push_back( neighbor );
+      if( (l_next->m_dist + 1) < l_neighbor->m_dist ) {
+        l_neighbor->m_dist  = l_next->m_dist + 1;
+        l_neighbor->m_prev  = l_next->m_index;
+        l_toExplore.push( l_neighbor );
+        l_visited.push_back( l_neighbor );
       }
     }
   }
 
   //! Reset distances and previous info for all visited nodes during traversal
-  for( ait = visited.begin(); ait != visited.end(); ++ait ) {
-    (*ait)->dist = numeric_limits< int >::max();
-    (*ait)->prev = -1;
+  for( m_ait = l_visited.begin(); m_ait != l_visited.end(); ++m_ait ) {
+    (*m_ait)->m_dist = std::numeric_limits< int >::max();
+    (*m_ait)->m_prev = -1;
   }
 
   //! Return success flag
-  return found;
+  return l_found;
 }
 
 /** Input params: Actor index and height of disjoint set (passed by reference)
@@ -273,28 +284,26 @@ bool ActorConnect::pairBFSTraverse( const int &from, const int &to ) {
  *
  *  Finds an actor in the disjoint set array and returns index of sentinel node.
  */
-int ActorConnect::Find( const int &index, int &height ) {
-  int val = dsArr[index]; //! Value of disjoint set at index
-  int ind = index;        //! Stores sentinel node info
-  vector< int > indices;  //! Nodes traversed during find (for path compression)
+int ActorConnect::Find( const int &i_index,
+                              int &o_height ) {
+  int l_val = m_dsArr[i_index]; //! Value of disjoint set at index
+  int l_ind = i_index;        //! Stores sentinel node info
+  std::vector< int > l_indices;  //! Nodes traversed during find (for path compression)
 
-  while( val != -1 ) {
-    indices.push_back( ind );
-    ind = val;
-    val = dsArr[val];
-    height++;
+  while( l_val != -1 ) {
+    l_indices.push_back( l_ind );
+    l_ind = l_val;
+    l_val = m_dsArr[l_val];
+    o_height++;
   }
 
   //! Path-compression algorithm (for disjoint sets having height greater than 1)
-  if( height > 1 ) {
-    vector< int >::iterator it; //! Iterator
-
-    for( it = indices.begin(); it != indices.end(); ++it )
-      dsArr[*it] = ind;
-  }
+  if( o_height > 1 )
+    for( std::vector< int >::iterator l_it = l_indices.begin(); l_it != l_indices.end(); ++l_it )
+      m_dsArr[*l_it] = l_ind;
 
   //! Return index of sentinel node
-  return ind;
+  return l_ind;
 }
 
 /** Input params: Indices of actor nodes to unite
@@ -303,17 +312,18 @@ int ActorConnect::Find( const int &index, int &height ) {
  *
  *  Performs union operation on the disjoint set array.
  */
-void ActorConnect::Union( const int &id1, const int &id2 ) {
-  int height1 = 0, height2 = 0;
-  int find1 = Find( id1, height1 );   //! Sentinel node-index of actor1
-  int find2 = Find( id2, height2 );   //! Sentinel node-index of actor2
+void ActorConnect::Union( const int &i_id1,
+                          const int &i_id2 ) {
+  int l_height1 = 0, l_height2 = 0;
+  int l_find1 = Find( i_id1, l_height1 );   //! Sentinel node-index of actor1
+  int l_find2 = Find( i_id2, l_height2 );   //! Sentinel node-index of actor2
 
   //! Perform union operation
-  if( find1 != find2 ) {
-    if( height1 < height2 )
-      dsArr[find1] = find2;
+  if( l_find1 != l_find2 ) {
+    if( l_height1 < l_height2 )
+      m_dsArr[l_find1] = l_find2;
     else
-      dsArr[find2] = find1;
+      m_dsArr[l_find2] = l_find1;
   }
 }
 
@@ -323,34 +333,34 @@ void ActorConnect::Union( const int &id1, const int &id2 ) {
  *
  *  Performs union operation on actors connected by movie of given year.
  */
-void ActorConnect::constructArr( const int &year ) {
-  int   id1, id2;
+void ActorConnect::constructArr( const int &i_year ) {
+  int l_id1, l_id2;
 
-  for( moa = moviesOfActor.begin(); moa != moviesOfActor.end(); ++moa ) {
-    for( vit = (moa->second).begin(); vit != (moa->second).end(); ++vit ) {
+  for( m_moa = m_moviesOfActor.begin(); m_moa != m_moviesOfActor.end(); ++m_moa ) {
+    for( m_vit = (m_moa->second).begin(); m_vit != (m_moa->second).end(); ++m_vit ) {
       //! *vit is movie of actor
-      if( extractYear( *vit ) != year )
+      if( extractYear( *m_vit ) != i_year )
         continue;
 
-      aim = actorsInMovie.find( *vit );   //! *aim is movie
-      if( aim != actorsInMovie.end() ) {
-        for( sit = (aim->second).begin(); sit != (aim->second).end(); ++sit ) {
+      m_aim = m_actorsInMovie.find( *m_vit );   //! *aim is movie
+      if( m_aim != m_actorsInMovie.end() ) {
+        for( m_sit = (m_aim->second).begin(); m_sit != (m_aim->second).end(); ++m_sit ) {
           //! *sit is list of actors in movie
 
           //! Skip self
-          if( (moa->first).compare( *sit ) == 0 )
+          if( (m_moa->first).compare( *m_sit ) == 0 )
             continue;
 
           //! Get index of actor1
-          ioa   = indexOfActor.find( moa->first );
-          id1   = ioa->second;
+          m_ioa   = m_indexOfActor.find( m_moa->first );
+          l_id1   = m_ioa->second;
 
           //! Get index of actor2
-          ioa   = indexOfActor.find( *sit );
-          id2   = ioa->second;
+          m_ioa   = m_indexOfActor.find( *m_sit );
+          l_id2   = m_ioa->second;
 
           //! Perform union operation for the actors
-          Union( id1, id2 );
+          Union( l_id1, l_id2 );
         }
       }
     }
@@ -363,88 +373,90 @@ void ActorConnect::constructArr( const int &year ) {
  *
  *  Performs a union-find traversal between the actors and return success state).
  */
-bool ActorConnect::pairUFindTraverse( const int &from, const int &to ) {
-  int height1 = 0, height2 = 0;
-  int find1 = Find( from, height1 );  //! Sentinel index of initial node
-  int find2 = Find( to, height2 );    //! Sentinel index of end node
+bool ActorConnect::pairUFindTraverse( const int &i_from,
+                                      const int &i_to ) {
+  int l_height1 = 0, l_height2 = 0;
+  int l_find1 = Find( i_from, l_height1 );  //! Sentinel index of initial node
+  int l_find2 = Find( i_to, l_height2 );    //! Sentinel index of end node
 
   //! UFind traversal was successfull if both sentinel indices were equal
-  return (find1 == find2);
+  return (l_find1 == l_find2);
 }
 
 /** Input params: Input filename and traversal algorithm
  *  Return param: Boolean
  *  Description : Connect actors in input actor-pair file
  */
-bool ActorConnect::connectActors( const char *infile, const string &algo ) {
-  bool flag = false;
-  int id1, id2;
-  string s;
+bool ActorConnect::connectActors( const char        *i_infile,
+                                  const std::string &i_algo ) {
+  bool l_flag = false;
+  int l_id1, l_id2;
+  std::string l_s;
 
-  if( algo == "bfs" )
-    cout << "Running BFS" << endl;
+  if( i_algo == "bfs" )
+    std::cout << "Running BFS\n";
   else
-    cout << "Running UFind" << endl;
+    std::cout << "Running UFind\n";
 
   extractYearsInAscOrder();
 
   //! Open the test_pairs_file
-  ifstream in( infile );
+  std::ifstream l_in( i_infile );
 
   //! Read and ignore first line (i.e. Actor1	Actor2)
-  if( in )
-    getline( in, s );
+  if( l_in )
+    std::getline( l_in, l_s );
 
-  while( in ) {
+  while( l_in ) {
     //! Get the next line
-    if( !getline( in, s ) )
+    if( !std::getline( l_in, l_s ) )
       break;
 
-    istringstream ss( s );
-    vector< string > pairs;
+    std::istringstream l_ss( l_s );
+    std::vector< std::string > l_pairs;
 
-    while( ss ) {
-      string next;
+    while( l_ss ) {
+      std::string l_next;
 
       //! Get the next string before hitting a tab character and put it in next
-      if( !getline( ss, next, '\t' ) )
+      if( !std::getline( l_ss, l_next, '\t' ) )
         break;
 
-      pairs.push_back( next );
+      l_pairs.push_back( l_next );
     }
 
-    if( pairs.size() != 2 ) {
+    if( l_pairs.size() != 2 ) {
       //! We should have exactly 2 columns
       continue;
     }
 
     //! Get actor names
-    string actor1( pairs[0] );
-    string actor2( pairs[1] );
+    std::string l_actor1( l_pairs[0] );
+    std::string l_actor2( l_pairs[1] );
 
     //! Get index of actor1
-    ioa = indexOfActor.find( actor1 );
-    if( ioa == indexOfActor.end() )
-      flag = true;
+    m_ioa = m_indexOfActor.find( l_actor1 );
+    if( m_ioa == m_indexOfActor.end() )
+      l_flag = true;
     else
-      id1 = ioa->second;
+      l_id1 = m_ioa->second;
 
     //! Get index of actor2
-    ioa = indexOfActor.find( actor2 );
-    if( ioa == indexOfActor.end() )
-      flag = true;
+    m_ioa = m_indexOfActor.find( l_actor2 );
+    if( m_ioa == m_indexOfActor.end() )
+      l_flag = true;
     else
-      id2 = ioa->second;
+      l_id2 = m_ioa->second;
 
-    string line = actor1 + "\t" + actor2 + "\t";
+    std::string l_line = l_actor1 + "\t" + l_actor2 + "\t";
 
     //! Try and find connection between the pair
-    if( !flag )
-      line += connectPair( algo, id1, id2 );
+    if( !l_flag )
+      l_line += connectPair( i_algo, l_id1, l_id2 );
     else
-      line += "9999";
+      l_line += "9999";
 
-    outLines.push_back( line );   //! Store line info to be written out later
+    m_outLines.push_back( l_line );   //! Store line info to be written out later
   }
 
   return true;

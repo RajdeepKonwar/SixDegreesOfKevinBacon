@@ -28,47 +28,45 @@
  * Implementation of pathfinder program.
  **/
 
-#include <string.h>
 #include "ActorGraph.h"
 
-int main( int argc, char** argv ) {
+int main( int i_argc, char** i_argv ) {
   //! Start time
-  clock_t t   = clock();
+  clock_t l_t   = clock();
 
   //! Check input arguments
-  if( argc != 5 ) {
-    cout << "Invalid number of arguments." << endl
-         << "Usage: ./pathfinder movie_casts_file u/w test_pairs_file out_file"
-         << endl;
-    return -1;
+  if( i_argc != 5 ) {
+    std::cout << "Invalid number of arguments.\n"
+              << "Usage: ./pathfinder movie_casts_file u/w test_pairs_file out_file\n";
+    return EXIT_FAILURE;
   }
 
-  if( (strcmp( argv[2], "u" ) != 0) && (strcmp( argv[2], "w" ) != 0) ) {
-    cout << "Invalid second argument! Should be u/w." << endl;
-    return -1;
+  if( (strcmp( i_argv[2], "u" ) != 0) && (strcmp( i_argv[2], "w" ) != 0) ) {
+    std::cout << "Invalid second argument! Should be u/w.\n";
+    return EXIT_FAILURE;
   }
 
  //! ActorGraph object
-  ActorGraph act( "(actor)--[movie#@year]-->(actor)--...", argv[2] );
+  ActorGraph l_act( "(actor)--[movie#@year]-->(actor)--...", i_argv[2] );
 
   //! Load the movie_casts_file
-  if( !act.loadFromFile( argv[1] ) )
-    return -1;
+  if( !l_act.loadFromFile( i_argv[1] ) )
+    return EXIT_FAILURE;
 
   //! Create the graph with actors as nodes and movies as edges
-  act.createGraph();
+  l_act.createGraph();
 
   //! Load actor pairs from input file and perform path find operations
-  if( !act.loadTestPairs( argv[3] ) )
-    return -1;
+  if( !l_act.loadTestPairs( i_argv[3] ) )
+    return EXIT_FAILURE;
 
   //! Write final output to file
-  if( !act.writeOutLines( argv[4] ) )
-    return -1;
+  if( !l_act.writeOutLines( i_argv[4] ) )
+    return EXIT_FAILURE;
 
   //! Finish time
-  t = clock() - t;
-  cout << "Time taken: " << (float) t / CLOCKS_PER_SEC << "s" << endl;
+  l_t = clock() - l_t;
+  std::cout << "Time taken: " << (float) l_t / CLOCKS_PER_SEC << "s\n";
 
-  return 0;
+  return EXIT_SUCCESS;
 }
