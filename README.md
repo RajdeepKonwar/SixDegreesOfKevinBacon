@@ -6,7 +6,7 @@ Based on the [Six Degrees of Separation](https://en.wikipedia.org/wiki/Six_degre
 make all type=opt
 ```
 * This will generate two programs - `actorconnections` and `pathfinder`.
-* The `actorconnections` program answers the following question: "After which year did actors X and Y become connected?"
+* The `actorconnections` program answers the question: "After which year did actors X and Y become connected?"
 * The `pathfinder` program computes the shortest path between 2 actors (weighted/unweighted where weight is how old the movie is from 2016; older movies having lesser weight). Weighted uses Dijkstra's (greedy) algorithm whereas the unweighted traversal uses BFS (Breadth First Search) algorithm.
 * Omit `type=opt` when compiling for debugging purposes.
 * To clean executables, type `make clean`.
