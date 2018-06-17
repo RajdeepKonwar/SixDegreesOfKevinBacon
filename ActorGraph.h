@@ -29,8 +29,8 @@
  * perform BFS and Djikstra's path-finding traversal between actors.
  **/
 
-#ifndef ACTORGRAPH_H
-#define ACTORGRAPH_H
+#ifndef ACTOR_GRAPH_H
+#define ACTOR_GRAPH_H
 
 #include <limits>
 #include <queue>

@@ -28,8 +28,8 @@
  * Declaration of struct Edge's member variables required define an edge in graph.
  **/
 
-#ifndef ACTOREDGE_H
-#define ACTOREDGE_H
+#ifndef ACTOR_EDGE_H
+#define ACTOR_EDGE_H
 
 #include <iostream>
 #include <cstring>

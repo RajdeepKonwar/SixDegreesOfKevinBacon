@@ -28,8 +28,8 @@
  * Declaration of struct Actor's member variables required define a node in graph.
  **/
 
-#ifndef ACTORNODE_H
-#define ACTORNODE_H
+#ifndef ACTOR_NODE_HPP
+#define ACTOR_NODE_HPP
 
 #include <unordered_map>
 
